@@ -1,6 +1,9 @@
 from django.shortcuts import render
+from django.shortcuts import  get_object_or_404
+from django.views.generic import DetailView, ListView
 
 from .models import Post, Tag, Category
+from config.models import SideBar
 
 # Create your views here.
 def post_list(request, category_id=None, tag_id=None):
@@ -48,8 +51,9 @@ def post_list(request, category_id=None, tag_id=None):
         'category':category,
         'tag': tag,
         'post_list': post_list,
+        'sidebars': SideBar.get_all(),
     }
-    #context.update(Category.get_navs())
+    context.update(Category.get_navs())
     return render(request, 'blog/list.html', context=context)
 
 
@@ -72,3 +76,92 @@ def post_detail(request, post_id):
     using： 使用哪种模板引擎解析，这可以在settings中配置，默认使用Django自带模板
     '''
 
+class CommonViewMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'sidebars': SideBar.get_all(),
+        })
+        context.update(Category.get_navs())
+        return context
+
+
+
+class IndexView(CommonViewMixin, ListView):
+    queryset = Post.latest_posts()
+    paginate_by = 5
+    context_object_name = 'post_list'
+    template_name = 'blog/list.html'
+
+
+class PostDetailView(CommonViewMixin, DetailView):
+    
+    '''
+    model = Post
+    template_name = 'blog/detail.html'
+    '''
+    queryset = Post.latest_posts()
+    template_name = 'blog/detail.html'
+    context_object_name = 'post'
+    pk_url_kwarg = 'post_id'  # pk_url_kwarg = 'pk'
+
+    
+    '''
+    DetailView 提供了如下如下属性和接口
+    model 属性： 指定当前View要使用的Model
+    queryset 属性： 跟Model一样，二选一。
+                    设定基础的数据集，Model的设定没有过滤的功能，
+                    可以通过queryset = Post.objects.filter(status=Post.STATUS_NORMAL)进行过滤
+    template_name 属性： 模板名称
+    get_queryset 接口： 根据URL参数，从queryset上获取到对应的实例
+    get_context_data 接口: 获取渲染到模板中的所有上下午，如果有新增数据需要传递到模板中，
+                           可以重写该方法来完成
+    '''
+
+class PostListView(ListView):
+    queryset = Post.latest_posts()
+    paginate_by = 1
+    context_object_name = 'post_list'  # 如果不设置此项，在模板中需要使用 object_list 变量
+    template_name = 'blog/list.html'
+
+
+
+class CategoryView(IndexView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_id= self.kwargs.get('category_id')
+        category = get_object_or_404(Category, pk=category_id)
+        context.update({
+            'category': category,
+        })
+        return context
+
+    def get_queryset(self):
+        '''重写queryset, 根据分类过滤 '''
+        queryset = super().get_queryset()
+        category_id = self.kwargs.get('category_id')
+        return queryset.filter(category_id=category_id)
+
+
+class TagView(IndexView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tag_id = self.kwargs.get('tag_id')
+        tag = get_object_or_404(Tag, pk=tag_id)
+        context.update({
+            'tag': tag,
+        })
+        return context
+
+    def get_queryset(self):
+        '''重写queryset, 根据标签过滤'''
+
+        queryset = super().get_queryset()
+        tag_id = self.kwargs.get('tag_id')
+        return queryset.filter(tag__id=tag_id)
+
+    '''
+    get_object_or_404: 一个快捷方式，用来获取一个对象的实例。
+                       如果获取到，就返回实例对象；如果不存在，直接抛出404错误
+    tag_id = self.kwargs.get('tag_id')里面，self.kwargs 中的数据其实是URL定义中拿到的
+    '''

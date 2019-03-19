@@ -133,10 +133,10 @@ class PostAdmin(admin.ModelAdmin):
             '<a href="{}">编辑</a>',
             reverse('admin:blog_post_change', args=(obj.id, ))
         )
-    operator.short_description = '操作'
+        operator.short_description = '操作'
 
     def save_model(self, request, obj, form, change):
-        obj,owner = request.user
+        obj.owner = request.user
         return super(PostAdmin, self).save_model(request, obj, form, change)
 
     def get_queryset(self, request):

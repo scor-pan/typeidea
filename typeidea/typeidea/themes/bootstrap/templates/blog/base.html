@@ -21,7 +21,7 @@
 			{% for cate in navs %}
 				<li class='nav-item'>
 					<a class='nav-link' href='{% url 'category-list' cate.id %}'>{{ cate.name }}</a>
-				</li>
+				</lcate.id>
 			{% endfor %}
 			</ul>
 			<form class='form-inline my-2 my-lg-0' action'GET'>
@@ -38,10 +38,13 @@
 	<div class='container main'>
 		<div class='row'>
 			<div class='col-9 post-list'>
+
 			{% block main %}
 			{% endblock %}
+
 			</div>
 			<div class='col-3'>
+
 				{% block sidebar %}
 					{% for sidebar in sidebars %}
 					<div class='card sidebar'>
@@ -54,6 +57,7 @@
 					</div>
 					{% endfor %}
 				{% endblock %}
+
 			</div>
 		</div>
 	</div>
