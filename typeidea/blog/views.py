@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.shortcuts import  get_object_or_404
 from django.views.generic import DetailView, ListView
+from django.db.models import Q 
 
-from .models import Post, Tag, Category
-from config.models import SideBar
-
+from blog.models import Post, Tag, Category
+from comment.forms import CommentForm
+from comment.models import Comment
 # Create your views here.
 def post_list(request, category_id=None, tag_id=None):
     tag = None
@@ -47,6 +48,8 @@ def post_list(request, category_id=None, tag_id=None):
     else:
         post_list = Post.latest_posts()
 
+
+    from config.models import SideBar
     context = {
         'category':category,
         'tag': tag,
@@ -76,8 +79,9 @@ def post_detail(request, post_id):
     using： 使用哪种模板引擎解析，这可以在settings中配置，默认使用Django自带模板
     '''
 
-class CommonViewMixin:
+class CommonViewMixin:    
     def get_context_data(self, **kwargs):
+        from config.models import SideBar
         context = super().get_context_data(**kwargs)
         context.update({
             'sidebars': SideBar.get_all(),
@@ -117,6 +121,15 @@ class PostDetailView(CommonViewMixin, DetailView):
     get_context_data 接口: 获取渲染到模板中的所有上下午，如果有新增数据需要传递到模板中，
                            可以重写该方法来完成
     '''
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'comment_form': CommentForm,
+            'comment_list': Comment.get_by_target(self.request.path),
+        })
+        return context
+
 
 class PostListView(ListView):
     queryset = Post.latest_posts()
@@ -165,3 +178,27 @@ class TagView(IndexView):
                        如果获取到，就返回实例对象；如果不存在，直接抛出404错误
     tag_id = self.kwargs.get('tag_id')里面，self.kwargs 中的数据其实是URL定义中拿到的
     '''
+
+class SearchView(IndexView):
+    def get_context_data(self):
+        context = super().get_context_data()
+        context.update({
+            'keyword': self.request.GET.get('keyword', '')
+        })
+        return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        keyword = self.request.GET.get('keyword')
+        if not keyword:
+            return queryset
+        return queryset.filter(Q(title__icontains=keyword) | Q(desc__icontains=keyword))
+
+
+class AuthorView(IndexView):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        author_id = self.kwargs.get('owner_id')
+        return queryset.filter(owner_id=author_id)
+
+

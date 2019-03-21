@@ -1,6 +1,10 @@
 from django.contrib.auth.models import User
 from django.db import models
 from django.template.loader import render_to_string
+from django.views.generic import ListView
+
+
+from blog.views import CommonViewMixin
 
 # Create your models here.
 class Link(models.Model):
@@ -67,7 +71,7 @@ class SideBar(models.Model):
             result = self.content
         elif self.display_type == self.DISPLAY_LATEST:
             context = {
-                'posts': Post.latest_posts()
+                'posts': Post.latest_posts(with_related=False)
             }
             result = render_to_string('config/blocks/sidebar_posts.html', context)
         elif self.display_type == self.DISPALY_HOT:
@@ -86,5 +90,9 @@ class SideBar(models.Model):
     @classmethod
     def get_all(cls):
             return cls.objects.filter(status=cls.STATUS_SHOW)
+
+
     class Meta:
         verbose_name = verbose_name_plural = '侧边栏'
+
+
