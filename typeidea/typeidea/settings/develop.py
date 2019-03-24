@@ -3,12 +3,29 @@ from .base import *  #NOQA
 
 
 DEBUG = True
+
+'''
 DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
             }
         }
+'''
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+
+        'ENGONE': 'django.db.backends.mysql',    
+        'NAME':'test',
+        'USER': 'root',
+        'PASSWORD': 'pp',
+        'HOST': 'localhost',
+        'PORT': 3306,
+    }
+}
 
 INSTALLED_APPS += [
     'debug_toolbar',

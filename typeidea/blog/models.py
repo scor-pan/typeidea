@@ -67,11 +67,10 @@ class Post(models.Model):
     STATUS_DELETE = 0
     STATUS_DRAFT = 2
     STATUS_ITEMS = (
-            (STATUS_NORMAL, '正常'),
-            (STATUS_DELETE, '删除'),
-            (STATUS_DRAFT, '草稿'),
+        (STATUS_NORMAL, '正常'),
+        (STATUS_DELETE, '删除'),
+        (STATUS_DRAFT, '草稿'),
     )
-
 
     title = models.CharField(max_length=255, verbose_name='标题')
     desc = models.CharField(max_length=1024, blank=True, verbose_name='摘要')
@@ -85,6 +84,10 @@ class Post(models.Model):
 
     pv = models.PositiveIntegerField(default=1)
     uv = models.PositiveIntegerField(default=1)
+
+
+    def __str__(self):
+        return self.title
 
     @staticmethod
     def get_by_tag(tag_id):
@@ -119,6 +122,7 @@ class Post(models.Model):
         if with_related:
             queryset = queryset.select_related('owner', 'category')
         return queryset
+
     ''' 
     @classmethod
     def get_navs(cls):
